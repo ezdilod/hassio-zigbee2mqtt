@@ -1,0 +1,41 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    # Führt den Workflow täglich um 03:00 UTC aus
+    # Du kannst die Zeit anpassen. cron-Syntax: Minute Stunde Tag_des_Monats Monat Tag_der_Woche
+    # Beispiel für jede Stunde: '0 * * * *'
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Ermöglicht das manuelle Auslösen des Workflows über die GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest # Der virtuelle Server, auf dem der Workflow läuft
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4 # Action zum Klonen deines Forks
+      with:
+        token: ${{ secrets.PAT_TOKEN }} # Verwendet das Secret, das du in Schritt 2 erstellt hast
+
+    - name: Set up Git user and email
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Add upstream remote
+      # Ersetze DEN_URL_DES_ORIGINAL_REPOS durch die HTTPS-URL des Original-Repositorys.
+      # (Z.B. https://github.com/zigbee2mqtt/hassio-zigbee2mqtt.git wie in deinem Screenshot)
+      run: git remote add upstream https://github.com/https://github.com/zigbee2mqtt/hassio-zigbee2mqtt.git || true # || true verhindert Fehler, wenn remote schon existiert
+
+    - name: Fetch upstream
+      run: git fetch upstream
+
+    - name: Merge upstream into current branch
+      # Ersetze DEIN_HAUPTBRANCH durch den Namen deines Hauptbranches (master oder main)
+      # Ersetze UPSTREAM_HAUPTBRANCH durch den Namen des Hauptbranches des Original-Repos (master oder main)
+      run: git merge upstream/master -m "Merge upstream into DEIN_HAUPTBRANCH" --no-edit
+
+    - name: Push changes to fork
+      # Ersetze DEIN_HAUPTBRANCH durch den Namen deines Hauptbranches (master oder main)
+      run: git push origin master
